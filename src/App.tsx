@@ -3,7 +3,9 @@ import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import Base64Utility from './utilities/Base64Utility';
 import EpochUtility from './utilities/EpochUtility';
+import RegexUtility from './utilities/RegexUtility';
 import TemperatureUtility from './utilities/TemperatureUtility';
+import TimeZoneUtility from './utilities/TimeZoneUtility';
 import URLUtility from './utilities/URLUtility';
 
 function App() {
@@ -13,7 +15,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/base64" element={<Base64Utility />} />
         <Route path="/epoch" element={<EpochUtility />} />
+        <Route path="/regex" element={<RegexUtility />} />
         <Route path="/temperature" element={<TemperatureUtility />} />
+        <Route path="/timezone" element={<TimeZoneUtility />} />
         <Route path="/url" element={<URLUtility />} />
       </Routes>
     </Layout>

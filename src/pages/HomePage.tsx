@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FileText, Clock, Thermometer, Link as LinkIcon } from 'lucide-react';
+import { Clock, Code, FileText, Globe, Link as LinkIcon, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -19,12 +19,28 @@ const utilities = [
     color: 'bg-green-500',
   },
   {
+    id: 'regex',
+    name: 'Regex Tester',
+    description: 'Test JavaScript regular expressions with live highlighting',
+    icon: Code,
+    path: '/regex',
+    color: 'bg-indigo-500',
+  },
+  {
     id: 'temperature',
     name: 'Temperature Converter',
     description: 'Convert between Fahrenheit and Celsius',
     icon: Thermometer,
     path: '/temperature',
     color: 'bg-red-500',
+  },
+  {
+    id: 'timezone',
+    name: 'Time Zone Converter',
+    description: 'Compare local time across multiple global time zones',
+    icon: Globe,
+    path: '/timezone',
+    color: 'bg-emerald-500',
   },
   {
     id: 'url',
