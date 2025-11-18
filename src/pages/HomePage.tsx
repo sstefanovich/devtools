@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, Code, FileText, Globe, Link as LinkIcon, Thermometer } from 'lucide-react';
+import { Clock, Code, FileText, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -49,6 +49,14 @@ const utilities = [
     icon: LinkIcon,
     path: '/url',
     color: 'bg-purple-500',
+  },
+  {
+    id: 'guid',
+    name: 'GUID Generator',
+    description: 'Generate unique GUIDs (Globally Unique Identifiers) in various formats',
+    icon: Key,
+    path: '/guid',
+    color: 'bg-orange-500',
   },
 ];
 
