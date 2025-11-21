@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Code, FileText, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
+import { Calendar, Clock, Code, FileText, Gamepad2, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -33,6 +33,14 @@ const utilities = [
     icon: Code,
     path: '/regex',
     color: 'bg-indigo-500',
+  },
+  {
+    id: 'space-invaders',
+    name: 'Space Invaders',
+    description: 'Classic arcade game - defend Earth from alien invaders!',
+    icon: Gamepad2,
+    path: '/space-invaders',
+    color: 'bg-purple-500',
   },
   {
     id: 'temperature',

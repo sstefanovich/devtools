@@ -6,6 +6,7 @@ import CronUtility from './utilities/CronUtility';
 import EpochUtility from './utilities/EpochUtility';
 import GuidUtility from './utilities/GuidUtility';
 import RegexUtility from './utilities/RegexUtility';
+import SpaceInvadersUtility from './utilities/SpaceInvadersUtility';
 import TemperatureUtility from './utilities/TemperatureUtility';
 import TimeZoneUtility from './utilities/TimeZoneUtility';
 import URLUtility from './utilities/URLUtility';
@@ -20,6 +21,7 @@ function App() {
         <Route path="/epoch" element={<EpochUtility />} />
         <Route path="/guid" element={<GuidUtility />} />
         <Route path="/regex" element={<RegexUtility />} />
+        <Route path="/space-invaders" element={<SpaceInvadersUtility />} />
         <Route path="/temperature" element={<TemperatureUtility />} />
         <Route path="/timezone" element={<TimeZoneUtility />} />
         <Route path="/url" element={<URLUtility />} />
