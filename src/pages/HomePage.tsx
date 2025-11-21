@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, Code, FileText, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
+import { Calendar, Clock, Code, FileText, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -9,6 +9,14 @@ const utilities = [
     icon: FileText,
     path: '/base64',
     color: 'bg-blue-500',
+  },
+  {
+    id: 'cron',
+    name: 'CRON Parser & Builder',
+    description: 'Parse CRON expressions to understand schedules or build new expressions',
+    icon: Calendar,
+    path: '/cron',
+    color: 'bg-cyan-500',
   },
   {
     id: 'epoch',
