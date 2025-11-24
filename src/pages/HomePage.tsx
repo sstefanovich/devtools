@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Code, FileText, Gamepad2, Globe, Key, Link as LinkIcon, Thermometer } from 'lucide-react';
+import { BarChart3, Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -17,6 +17,14 @@ const utilities = [
     icon: Calendar,
     path: '/cron',
     color: 'bg-cyan-500',
+  },
+  {
+    id: 'data-science',
+    name: 'Data Science Formulas',
+    description: 'Explore ML model formulas and calculate evaluation metrics',
+    icon: Calculator,
+    path: '/data-science',
+    color: 'bg-indigo-500',
   },
   {
     id: 'epoch',
@@ -73,6 +81,22 @@ const utilities = [
     icon: Key,
     path: '/guid',
     color: 'bg-orange-500',
+  },
+  {
+    id: 'mermaid',
+    name: 'Mermaid Diagram Editor',
+    description: 'Create and edit diagrams using Mermaid syntax with live preview',
+    icon: FileCode,
+    path: '/mermaid',
+    color: 'bg-pink-500',
+  },
+  {
+    id: 'qrcode',
+    name: 'QR Code Generator',
+    description: 'Generate QR codes from text, URLs, WiFi credentials, and more',
+    icon: QrCode,
+    path: '/qrcode',
+    color: 'bg-teal-500',
   },
 ];
 
