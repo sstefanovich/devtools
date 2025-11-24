@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
+import { Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
 
 const utilities = [
   {

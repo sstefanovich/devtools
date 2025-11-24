@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calculator, Copy, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calculator, Copy } from 'lucide-react';
 
 interface Formula {
   name: string;

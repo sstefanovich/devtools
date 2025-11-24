@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QrCode, Copy, Download, Wifi, Link as LinkIcon, Mail, Phone } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -19,7 +19,6 @@ const QRCodeUtility: React.FC = () => {
   const [margin, setMargin] = useState<number>(4);
   const [darkColor, setDarkColor] = useState<string>('#000000');
   const [lightColor, setLightColor] = useState<string>('#FFFFFF');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate QR code
   useEffect(() => {
