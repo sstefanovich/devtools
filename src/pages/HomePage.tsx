@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
+import { BarChart3, Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -25,6 +25,14 @@ const utilities = [
     icon: Calculator,
     path: '/data-science',
     color: 'bg-indigo-500',
+  },
+  {
+    id: 'statistics',
+    name: 'Statistical Calculator',
+    description: 'Calculate z-scores, t-scores, confidence intervals, and more',
+    icon: BarChart3,
+    path: '/statistics',
+    color: 'bg-violet-500',
   },
   {
     id: 'epoch',

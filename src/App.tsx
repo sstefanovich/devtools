@@ -10,6 +10,7 @@ import MermaidUtility from './utilities/MermaidUtility';
 import QRCodeUtility from './utilities/QRCodeUtility';
 import RegexUtility from './utilities/RegexUtility';
 import SpaceInvadersUtility from './utilities/SpaceInvadersUtility';
+import StatisticalCalculatorUtility from './utilities/StatisticalCalculatorUtility';
 import TemperatureUtility from './utilities/TemperatureUtility';
 import TimeZoneUtility from './utilities/TimeZoneUtility';
 import URLUtility from './utilities/URLUtility';
@@ -28,6 +29,7 @@ function App() {
         <Route path="/qrcode" element={<QRCodeUtility />} />
         <Route path="/regex" element={<RegexUtility />} />
         <Route path="/space-invaders" element={<SpaceInvadersUtility />} />
+        <Route path="/statistics" element={<StatisticalCalculatorUtility />} />
         <Route path="/temperature" element={<TemperatureUtility />} />
         <Route path="/timezone" element={<TimeZoneUtility />} />
         <Route path="/url" element={<URLUtility />} />
