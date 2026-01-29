@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
+import { BarChart3, Brain, Calendar, Calculator, Clock, Code, FileCode, FileText, Gamepad2, Globe, HardDrive, Key, Link as LinkIcon, QrCode, Thermometer } from 'lucide-react';
 
 const utilities = [
   {
@@ -105,6 +105,22 @@ const utilities = [
     icon: QrCode,
     path: '/qrcode',
     color: 'bg-teal-500',
+  },
+  {
+    id: 'memory-size',
+    name: 'Memory Size Converter',
+    description: 'Convert between Bytes, KB, MB, GB, TB, and PB with binary or decimal systems',
+    icon: HardDrive,
+    path: '/memory-size',
+    color: 'bg-amber-500',
+  },
+  {
+    id: 'logic-builder',
+    name: 'Logic Statement Builder',
+    description: 'Build and evaluate logical expressions with AND, OR, and NOT operators with truth tables',
+    icon: Brain,
+    path: '/logic-builder',
+    color: 'bg-purple-500',
   },
 ];
 
