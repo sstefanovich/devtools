@@ -1,17 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, Copy, Plus, X, Trash2 } from 'lucide-react';
+import { Brain, Copy, Lightbulb } from 'lucide-react';
 
 type LogicNode = 
   | {
-      id: string;
       type: 'variable';
       value: string;
     }
   | {
-      id: string;
       type: 'operator';
       operator: 'AND' | 'OR' | 'NOT';
-      children?: LogicNode[];
+      children: LogicNode[];
     };
 
 type TruthTableRow = {
@@ -21,12 +19,148 @@ type TruthTableRow = {
 
 const LogicBuilderUtility: React.FC = () => {
   const [variables, setVariables] = useState<string[]>(['A', 'B']);
-  const [expression, setExpression] = useState<LogicNode | null>(null);
+  const [expressionText, setExpressionText] = useState<string>('A AND B');
   const [error, setError] = useState<string>('');
+
+  // Parse text expression into LogicNode
+  const parseExpression = (text: string): LogicNode | null => {
+    if (!text.trim()) return null;
+
+    try {
+      // Normalize the input: convert to uppercase, handle parentheses
+      let normalized = text.toUpperCase().trim();
+      
+      // Remove extra spaces around operators and parentheses
+      normalized = normalized.replace(/\s+/g, ' ');
+      normalized = normalized.replace(/\s*\(\s*/g, '(');
+      normalized = normalized.replace(/\s*\)\s*/g, ')');
+      
+      return parseExpressionRecursive(normalized);
+    } catch (err) {
+      setError('Invalid expression. Use format like: A AND B, NOT A, (A OR B) AND C');
+      return null;
+    }
+  };
+
+  // Recursive parser for expressions
+  const parseExpressionRecursive = (text: string): LogicNode => {
+    text = text.trim();
+    
+    // Handle NOT operator
+    if (text.startsWith('NOT ')) {
+      const inner = text.substring(4).trim();
+      // Remove outer parentheses if present
+      const innerText = inner.startsWith('(') && inner.endsWith(')') 
+        ? inner.slice(1, -1).trim() 
+        : inner;
+      return {
+        type: 'operator',
+        operator: 'NOT',
+        children: [parseExpressionRecursive(innerText)],
+      };
+    }
+
+    // Handle parentheses
+    if (text.startsWith('(') && text.endsWith(')')) {
+      // Check if it's a complete parenthesized expression
+      let depth = 0;
+      let isComplete = true;
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === '(') depth++;
+        if (text[i] === ')') depth--;
+        if (depth === 0 && i < text.length - 1) {
+          isComplete = false;
+          break;
+        }
+      }
+      if (isComplete) {
+        return parseExpressionRecursive(text.slice(1, -1).trim());
+      }
+    }
+
+    // Find operators (AND has precedence over OR)
+    const andIndex = findOperatorIndex(text, ' AND ');
+    if (andIndex !== -1) {
+      const left = text.substring(0, andIndex).trim();
+      const right = text.substring(andIndex + 5).trim();
+      return {
+        type: 'operator',
+        operator: 'AND',
+        children: [
+          parseExpressionRecursive(left),
+          parseExpressionRecursive(right),
+        ],
+      };
+    }
+
+    const orIndex = findOperatorIndex(text, ' OR ');
+    if (orIndex !== -1) {
+      const left = text.substring(0, orIndex).trim();
+      const right = text.substring(orIndex + 4).trim();
+      return {
+        type: 'operator',
+        operator: 'OR',
+        children: [
+          parseExpressionRecursive(left),
+          parseExpressionRecursive(right),
+        ],
+      };
+    }
+
+    // Must be a variable
+    if (text.length === 1 && /[A-Z]/.test(text)) {
+      return { type: 'variable', value: text };
+    }
+
+    throw new Error(`Invalid expression: ${text}`);
+  };
+
+  // Find operator index, respecting parentheses
+  const findOperatorIndex = (text: string, operator: string): number => {
+    let depth = 0;
+    for (let i = 0; i <= text.length - operator.length; i++) {
+      if (text[i] === '(') depth++;
+      if (text[i] === ')') depth--;
+      if (depth === 0 && text.substring(i, i + operator.length) === operator) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  // Extract variables from expression text (excluding operators)
+  const extractVariables = (text: string): string[] => {
+    const upperText = text.toUpperCase();
+    
+    // Remove operator keywords and parentheses, keep only single-letter variables
+    // Replace operators and parentheses with spaces, then find single letters
+    let cleaned = upperText
+      .replace(/\bAND\b/g, ' ')
+      .replace(/\bOR\b/g, ' ')
+      .replace(/\bNOT\b/g, ' ')
+      .replace(/[()]/g, ' ');
+    
+    // Match single uppercase letters (variables)
+    const matches = cleaned.match(/\b[A-Z]\b/g);
+    if (!matches) return [];
+    
+    // Return unique, sorted variables
+    return Array.from(new Set(matches)).sort();
+  };
+
+  // Get parsed expression
+  const parsedExpression = useMemo(() => {
+    setError('');
+    const vars = extractVariables(expressionText);
+    if (vars.length > 0) {
+      setVariables(vars);
+    }
+    return parseExpression(expressionText);
+  }, [expressionText]);
 
   // Generate all possible combinations of variable values
   const generateTruthTable = useMemo((): TruthTableRow[] => {
-    if (variables.length === 0 || !expression) return [];
+    if (variables.length === 0 || !parsedExpression) return [];
 
     const numCombinations = Math.pow(2, variables.length);
     const rows: TruthTableRow[] = [];
@@ -42,7 +176,7 @@ const LogicBuilderUtility: React.FC = () => {
 
       // Evaluate expression for this row
       try {
-        row.result = evaluateExpression(expression, row);
+        row.result = evaluateExpression(parsedExpression, row);
       } catch (err) {
         row.result = false;
       }
@@ -51,7 +185,7 @@ const LogicBuilderUtility: React.FC = () => {
     }
 
     return rows;
-  }, [variables, expression]);
+  }, [variables, parsedExpression]);
 
   // Evaluate a logic expression given variable values
   const evaluateExpression = (node: LogicNode, values: { [key: string]: boolean }): boolean => {
@@ -61,21 +195,21 @@ const LogicBuilderUtility: React.FC = () => {
 
     if (node.type === 'operator') {
       if (node.operator === 'NOT') {
-        if (!node.children || node.children.length === 0) {
+        if (node.children.length === 0) {
           throw new Error('NOT operator requires one operand');
         }
         return !evaluateExpression(node.children[0], values);
       }
 
       if (node.operator === 'AND') {
-        if (!node.children || node.children.length < 2) {
+        if (node.children.length < 2) {
           throw new Error('AND operator requires two operands');
         }
         return node.children.every(child => evaluateExpression(child, values));
       }
 
       if (node.operator === 'OR') {
-        if (!node.children || node.children.length < 2) {
+        if (node.children.length < 2) {
           throw new Error('OR operator requires two operands');
         }
         return node.children.some(child => evaluateExpression(child, values));
@@ -83,127 +217,6 @@ const LogicBuilderUtility: React.FC = () => {
     }
 
     return false;
-  };
-
-  // Convert expression to readable string
-  const expressionToString = (node: LogicNode | null): string => {
-    if (!node) return 'No expression';
-    
-    if (node.type === 'variable') {
-      return node.value;
-    }
-
-    if (node.type === 'operator') {
-      if (node.operator === 'NOT') {
-        if (!node.children || node.children.length === 0) return 'NOT (?)';
-        return `NOT (${expressionToString(node.children[0])})`;
-      }
-
-      if (node.operator === 'AND' || node.operator === 'OR') {
-        if (!node.children || node.children.length < 2) {
-          return `${node.operator} (?)`;
-        }
-        const childrenStr = node.children.map(c => expressionToString(c)).join(` ${node.operator} `);
-        return `(${childrenStr})`;
-      }
-    }
-
-    return '';
-  };
-
-  // Add a variable
-  const addVariable = () => {
-    const nextVar = String.fromCharCode(65 + variables.length); // A, B, C, ...
-    setVariables([...variables, nextVar]);
-  };
-
-  // Remove a variable
-  const removeVariable = (varName: string) => {
-    if (variables.length <= 1) {
-      setError('At least one variable is required');
-      return;
-    }
-    setVariables(variables.filter(v => v !== varName));
-    setExpression(null); // Clear expression when variables change
-  };
-
-  // Build expression - improved builder interface
-  const addToExpression = (type: 'variable' | 'operator', value: string, operator?: 'AND' | 'OR' | 'NOT') => {
-    setError('');
-    
-    if (type === 'variable') {
-      const newNode: LogicNode = {
-        id: `var-${Date.now()}`,
-        type: 'variable',
-        value: value,
-      };
-
-      if (!expression) {
-        // Start new expression
-        setExpression(newNode);
-      } else if (expression.type === 'operator') {
-        // Add to existing operator
-        if (expression.operator === 'NOT') {
-          if (!expression.children || expression.children.length === 0) {
-            setExpression({
-              ...expression,
-              children: [newNode],
-            });
-          } else {
-            setError('NOT operator can only have one operand');
-          }
-        } else {
-          // AND/OR operator
-          if (!expression.children) {
-            setExpression({
-              ...expression,
-              children: [newNode],
-            });
-          } else if (expression.children.length < 2) {
-            setExpression({
-              ...expression,
-              children: [...expression.children, newNode],
-            });
-          } else {
-            setError('Operator already has two operands. Add a new operator to continue.');
-          }
-        }
-      } else {
-        // Current expression is a variable, need operator to combine
-        setError('Add an operator (AND/OR/NOT) to combine expressions');
-      }
-    } else if (type === 'operator') {
-      if (!expression) {
-        setError('Add a variable first');
-        return;
-      }
-
-      if (operator === 'NOT') {
-        // NOT wraps the current expression
-        const newNode: LogicNode = {
-          id: `op-${Date.now()}`,
-          type: 'operator',
-          operator: 'NOT',
-          children: [expression],
-        };
-        setExpression(newNode);
-      } else {
-        // AND/OR - create new operator with current expression as first child
-        const newNode: LogicNode = {
-          id: `op-${Date.now()}`,
-          type: 'operator',
-          operator: operator!,
-          children: [expression],
-        };
-        setExpression(newNode);
-      }
-    }
-  };
-
-  // Clear expression
-  const clearExpression = () => {
-    setExpression(null);
-    setError('');
   };
 
   const copyToClipboard = async (text: string) => {
@@ -214,6 +227,21 @@ const LogicBuilderUtility: React.FC = () => {
     }
   };
 
+  const loadExample = (example: string) => {
+    setExpressionText(example);
+    setError('');
+  };
+
+  const examples = [
+    'A AND B',
+    'A OR B',
+    'NOT A',
+    '(A OR B) AND C',
+    'NOT (A AND B)',
+    '(A AND B) OR (C AND D)',
+    'A AND NOT B',
+  ];
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -223,146 +251,93 @@ const LogicBuilderUtility: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Logic Statement Builder</h1>
         </div>
         <p className="text-gray-600">
-          Build and evaluate logical expressions with AND, OR, and NOT operators
+          Type logical expressions naturally and see the truth table instantly
         </p>
       </div>
 
-      {/* Variables Section */}
+      {/* Expression Input */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Variables</h3>
-          <button
-            onClick={addVariable}
-            className="btn-secondary flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Variable</span>
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {variables.map((varName) => (
-            <div
-              key={varName}
-              className="flex items-center space-x-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-lg"
-            >
-              <span className="font-mono font-semibold">{varName}</span>
-              {variables.length > 1 && (
-                <button
-                  onClick={() => removeVariable(varName)}
-                  className="text-purple-600 hover:text-purple-800"
-                  title="Remove variable"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Expression Builder */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Build Expression</h3>
-          {expression && (
+          <h3 className="text-lg font-semibold text-gray-900">Enter Expression</h3>
+          {expressionText && (
             <button
-              onClick={clearExpression}
+              onClick={() => copyToClipboard(expressionText)}
               className="btn-secondary flex items-center space-x-2"
+              title="Copy expression"
             >
-              <Trash2 className="h-4 w-4" />
-              <span>Clear</span>
+              <Copy className="h-4 w-4" />
+              <span>Copy</span>
             </button>
           )}
         </div>
 
-        {/* Current Expression Display */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Current Expression:</p>
-              <p className="font-mono text-lg text-gray-900">
-                {expressionToString(expression)}
-              </p>
-            </div>
-            {expression && (
-              <button
-                onClick={() => copyToClipboard(expressionToString(expression))}
-                className="p-2 text-gray-500 hover:text-gray-700"
-                title="Copy expression"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Builder Controls */}
         <div className="space-y-4">
-          {/* Add Variables */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add Variable
+              Type your logical expression
             </label>
+            <input
+              type="text"
+              value={expressionText}
+              onChange={(e) => {
+                setExpressionText(e.target.value);
+                setError('');
+              }}
+              placeholder="e.g., A AND B, NOT A, (A OR B) AND C"
+              className="input-field text-lg font-mono"
+            />
+            <p className="mt-2 text-sm text-gray-500">
+              Use AND, OR, NOT operators. Variables are automatically detected (A, B, C, etc.)
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Quick Examples */}
+          <div>
+            <div className="flex items-center space-x-2 mb-2">
+              <Lightbulb className="h-4 w-4 text-yellow-500" />
+              <label className="text-sm font-medium text-gray-700">Quick Examples</label>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {variables.map((varName) => (
+              {examples.map((example) => (
                 <button
-                  key={varName}
-                  onClick={() => addToExpression('variable', varName)}
-                  className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 font-mono font-semibold"
+                  key={example}
+                  onClick={() => loadExample(example)}
+                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-mono"
                 >
-                  {varName}
+                  {example}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Add Operators */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add Operator
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => addToExpression('operator', 'AND', 'AND')}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-semibold"
-              >
-                AND
-              </button>
-              <button
-                onClick={() => addToExpression('operator', 'OR', 'OR')}
-                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-semibold"
-              >
-                OR
-              </button>
-              <button
-                onClick={() => addToExpression('operator', 'NOT', 'NOT')}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-semibold"
-              >
-                NOT
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Instructions */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>How to build:</strong> Start by adding a variable, then add an operator (AND/OR/NOT), 
-            and continue building your expression. For AND/OR operators, add a second operand after selecting the operator.
-          </p>
         </div>
       </div>
 
+      {/* Detected Variables */}
+      {variables.length > 0 && (
+        <div className="card bg-purple-50 border-purple-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Detected Variables</h3>
+          <div className="flex flex-wrap gap-2">
+            {variables.map((varName) => (
+              <div
+                key={varName}
+                className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-mono font-semibold"
+              >
+                {varName}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Truth Table */}
-      {expression && generateTruthTable.length > 0 && (
+      {parsedExpression && generateTruthTable.length > 0 && (
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Truth Table</h3>
           <div className="overflow-x-auto">
@@ -421,24 +396,31 @@ const LogicBuilderUtility: React.FC = () => {
 
       {/* Information Section */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">About Logic Statements</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">How to Use</h3>
         <div className="space-y-3 text-gray-600">
           <p>
-            <strong>AND (∧):</strong> Returns true only when all operands are true. 
-            Example: A AND B is true only when both A and B are true.
+            <strong>Simple and intuitive:</strong> Just type your logical expression in plain English!
           </p>
+          <div className="space-y-2">
+            <p><strong>Operators:</strong></p>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li><code className="bg-gray-100 px-1 rounded">AND</code> - Both conditions must be true</li>
+              <li><code className="bg-gray-100 px-1 rounded">OR</code> - At least one condition must be true</li>
+              <li><code className="bg-gray-100 px-1 rounded">NOT</code> - Negates the condition</li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <p><strong>Examples:</strong></p>
+            <ul className="list-disc list-inside space-y-1 ml-4 font-mono text-sm">
+              <li><code>A AND B</code> - Both A and B are true</li>
+              <li><code>A OR B</code> - Either A or B (or both) are true</li>
+              <li><code>NOT A</code> - A is false</li>
+              <li><code>(A OR B) AND C</code> - (A or B) is true AND C is true</li>
+              <li><code>NOT (A AND B)</code> - It's not the case that both A and B are true</li>
+            </ul>
+          </div>
           <p>
-            <strong>OR (∨):</strong> Returns true when at least one operand is true. 
-            Example: A OR B is true when either A or B (or both) are true.
-          </p>
-          <p>
-            <strong>NOT (¬):</strong> Returns the opposite of its operand. 
-            Example: NOT A is true when A is false, and false when A is true.
-          </p>
-          <p>
-            <strong>Truth Table:</strong> Shows all possible combinations of variable values 
-            and the resulting output of your expression. Green rows indicate true results, 
-            red rows indicate false results.
+            <strong>Variables:</strong> Use single letters (A, B, C, etc.). Variables are automatically detected from your expression.
           </p>
         </div>
       </div>
